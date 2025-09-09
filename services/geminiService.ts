@@ -1,15 +1,15 @@
 
 import { GoogleGenAI, Modality } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
+// const API_KEY = process.env.API_KEY;
 
-if (!API_KEY) {
-  // This is a fallback for development and should be handled by the environment.
-  // In a real app, you might want to show a more user-friendly error.
-  console.error("API_KEY is not set in environment variables.");
-}
+// if (!API_KEY) {
+//   // This is a fallback for development and should be handled by the environment.
+//   // In a real app, you might want to show a more user-friendly error.
+//   console.error("API_KEY is not set in environment variables.");
+// }
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+// const ai = new GoogleGenAI({ apiKey: API_KEY! });
 
 // Utility to parse base64 string
 const parseBase64 = (base64String: string): { mimeType: string, data: string } | null => {
@@ -37,45 +37,54 @@ export const editImage = async (base64ImageData: string, prompt: string): Promis
   }
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image-preview',
-      contents: {
-        parts: [
-          {
-            inlineData: {
-              data: parsedImage.data,
-              mimeType: parsedImage.mimeType,
-            },
-          },
-          {
-            text: prompt,
-          },
-        ],
-      },
-      config: {
-        responseModalities: [Modality.IMAGE, Modality.TEXT],
-      },
-    });
+    // Mock response for development without API key
+    // const response = await ai.models.generateContent({
+    //   model: 'gemini-2.5-flash-image-preview',
+    //   contents: {
+    //     parts: [
+    //       {
+    //         inlineData: {
+    //           data: parsedImage.data,
+    //           mimeType: parsedImage.mimeType,
+    //         },
+    //       },
+    //       {
+    //         text: prompt,
+    //       },
+    //     ],
+    //   },
+    //   config: {
+    //     responseModalities: [Modality.IMAGE, Modality.TEXT],
+    //   },
+    // });
 
-    let resultImage: string | null = null;
-    let resultText: string | null = null;
+    // let resultImage: string | null = null;
+    // let resultText: string | null = null;
 
-    if (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {
-        for (const part of response.candidates[0].content.parts) {
-            if (part.inlineData) {
-                const base64ImageBytes: string = part.inlineData.data;
-                resultImage = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
-            } else if (part.text) {
-                resultText = part.text;
-            }
-        }
-    }
+    // if (response.candidates && response.candidates[0] && response.candidates[0].content && response.candidates[0].content.parts) {
+    //     for (const part of response.candidates[0].content.parts) {
+    //         if (part.inlineData) {
+    //             const base64ImageBytes: string = part.inlineData.data;
+    //             resultImage = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
+    //         } else if (part.text) {
+    //             resultText = part.text;
+    //         }
+    //     }
+    // }
     
-    if(!resultImage) {
-        throw new Error("API did not return an image. The model may not have been able to fulfill the request.");
-    }
+    // if(!resultImage) {
+    //     throw new Error("API did not return an image. The model may not have been able to fulfill the request.");
+    // }
 
-    return { image: resultImage, text: resultText };
+    // return { image: resultImage, text: resultText };
+
+    // Mock response - return the original image with a mock text response
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API delay
+    
+    return { 
+      image: base64ImageData, // Return the original image for now
+      text: `Mock response: Applied "${prompt}" to the image. (API key disabled for development)`
+    };
 
   } catch (error) {
     console.error("Error calling Gemini API:", error);
