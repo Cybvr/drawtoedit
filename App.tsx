@@ -1,12 +1,13 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { ControlPanel } from './components/ControlPanel';
-import { CanvasComponent, CanvasHandle } from './components/Canvas';
+import { KonvaCanvas, KonvaCanvasHandle } from './components/KonvaCanvas';
 import { Header } from './components/Header';
 import { editImage } from './services/geminiService';
 import { GeneratedImageDisplay } from './components/GeneratedImageDisplay';
 import { Toolbar } from './components/Toolbar';
+import { TopControls } from './components/TopControls';
 
-export type DrawingTool = 'brush' | 'eraser';
+export type DrawingTool = 'brush' | 'eraser' | 'select';
 
 const App: React.FC = () => {
   const [prompt, setPrompt] = useState('');
@@ -24,7 +25,7 @@ const App: React.FC = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [generatedText, setGeneratedText] = useState<string | null>(null);
 
-  const canvasRef = useRef<CanvasHandle>(null);
+  const canvasRef = useRef<KonvaCanvasHandle>(null);
 
   const fileToDataUrl = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -77,7 +78,7 @@ const App: React.FC = () => {
     setGeneratedText(null);
 
     try {
-      const compositeImageBase64 = canvasRef.current.getCombinedCanvasAsBase64();
+      const compositeImageBase64 = canvasRef.current.getCanvasAsBase64();
       if (!compositeImageBase64) {
         throw new Error("Could not get image from canvas.");
       }
@@ -117,8 +118,18 @@ const App: React.FC = () => {
   return (
     <div className="flex flex-col h-screen font-sans bg-background">
       <Header />
+      
+      {/* Top Controls */}
+      <TopControls
+        onBgChange={handleBgChange}
+        onFgChange={handleFgChange}
+        onReset={handleReset}
+        isGenerating={isLoading}
+      />
+      
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-80 bg-background flex flex-col border-r border-border overflow-y-auto">
+        {/* Left Toolbar */}
+        <aside className="w-20 bg-background flex flex-col border-r border-border">
           <Toolbar
             tool={tool}
             setTool={setTool}
@@ -130,25 +141,20 @@ const App: React.FC = () => {
             onRedo={handleRedo}
             isGenerating={isLoading}
           />
-          <ControlPanel
-            prompt={prompt}
-            setPrompt={setPrompt}
-            blendStrength={blendStrength}
-            setBlendStrength={setBlendStrength}
-            onBgChange={handleBgChange}
-            onFgChange={handleFgChange}
-            onGenerate={handleGenerate}
-            onReset={handleReset}
-            isGenerating={isLoading}
-          />
         </aside>
-        <main className="flex-1 flex flex-col items-center justify-center p-4 md:p-8 bg-background/50 overflow-auto">
-          <div className="text-center mb-4">
-            <p className="text-sm text-muted-foreground">Drag & drop images directly onto the canvas.</p>
-          </div>
-           <div className="w-full flex-1 flex items-center justify-center gap-8">
+        
+        {/* Main Canvas Area */}
+        <main className="flex-1 flex items-center justify-center p-8 bg-background/50 overflow-auto">
+          <div className="flex items-center justify-center gap-8">
             <div className="relative w-[512px] h-[512px] bg-[hsl(var(--muted))] rounded-lg shadow-2xl overflow-hidden">
-              <CanvasComponent ref={canvasRef} bgImage={bgImage} fgImage={fgImage} tool={tool} brushColor={brushColor} brushSize={brushSize} />
+              <KonvaCanvas 
+                ref={canvasRef} 
+                bgImage={bgImage} 
+                fgImage={fgImage} 
+                tool={tool} 
+                brushColor={brushColor} 
+                brushSize={brushSize} 
+              />
             </div>
             <GeneratedImageDisplay
               isLoading={isLoading}
@@ -156,8 +162,20 @@ const App: React.FC = () => {
               generatedImage={generatedImage}
               generatedText={generatedText}
             />
-           </div>
+          </div>
         </main>
+      </div>
+      
+      {/* Bottom Control Panel */}
+      <div className="border-t border-border bg-background">
+        <ControlPanel
+          prompt={prompt}
+          setPrompt={setPrompt}
+          blendStrength={blendStrength}
+          setBlendStrength={setBlendStrength}
+          onGenerate={handleGenerate}
+          isGenerating={isLoading}
+        />
       </div>
     </div>
   );
